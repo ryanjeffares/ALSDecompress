@@ -24,11 +24,17 @@
 *.suo
 *.user
 .vs/
+ALSDecompress/.vs/
 [Bb]in/
+ALSDecompress/[Bb]in/
 [Oo]bj/
+ALSDecompress/[Oo]bj/
 _UpgradeReport_Files/
+ALSDecompress/_UpgradeReport_Files/
 [Pp]ackages/
+ALSDecompress/[Pp]ackages/
 
 Thumbs.db
 Desktop.ini
 .DS_Store
+ALSDecompress/.DS_Store
