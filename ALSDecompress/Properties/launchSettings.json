@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ALSDecompress": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Users\\ryand\\Dev\\C# + .NET\\ALSDecompress\\ALSDecompress\\Resources\\DecompressionTest.als"
+    }
+  }
+}

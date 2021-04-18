@@ -1,6 +1,6 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Xml;
@@ -8,7 +8,7 @@ using ALSDecompress.AbletonDataTypes;
 
 namespace ALSDecompress
 {
-    public class ALSIOHandler
+    class ALSIOHandler
     {
         private AbletonLiveSet _abletonLiveSet;
         private readonly string _inputPath, _outputPath, _setName;
@@ -49,29 +49,33 @@ namespace ALSDecompress
                 );
             _abletonLiveSet = new AbletonLiveSet(_setName, version, encoding, abletonNode);
             GetValues(secondNode.FirstChild);
+            GetTracks(secondNode.FirstChild["Tracks"]);
+            GetMasterTrack(secondNode.FirstChild["MasterTrack"]);
+            GetViewStates(secondNode.FirstChild["ViewStates"]);
         }
 
         private void GetValues(XmlNode node)
         {
-            _abletonLiveSet.abletonHeader.intValues ??= new Dictionary<string, int>();
-            _abletonLiveSet.abletonHeader.boolValues ??= new Dictionary<string, bool>();
-            _abletonLiveSet.abletonHeader.videoRect ??= new Dictionary<string, int>();
-            var intValues = _abletonLiveSet.abletonHeader.intValues;
-            var boolValues = _abletonLiveSet.abletonHeader.boolValues;
-            var videoRect = _abletonLiveSet.abletonHeader.videoRect;
+            _abletonLiveSet.intValues ??= new Dictionary<string, int>();
+            _abletonLiveSet.boolValues ??= new Dictionary<string, bool>();
+            _abletonLiveSet.videoRect ??= new Dictionary<string, int>();
+            var intValues = _abletonLiveSet.intValues;
+            var boolValues = _abletonLiveSet.boolValues;
+            var videoRect = _abletonLiveSet.videoRect;
             var nodeList = node.ChildNodes;
             foreach (XmlElement n in nodeList)
             {
+                // single elements that have an attribute
                 if (n.Attributes.Count == 1)
                 {
-                    Console.WriteLine($"{n.Name} {n.Attributes[0].Value}");
+                    //Console.WriteLine($"{n.Name} {n.Attributes[0].Value}");
                     if (n.Name == "ViewData")
                     {
-                        _abletonLiveSet.abletonHeader.viewData = n.Attributes[0].Value;
+                        _abletonLiveSet.viewData = n.Attributes[0].Value;
                     }
                     else if (n.Name == "Annotation")
                     {
-                        _abletonLiveSet.abletonHeader.annotation = n.Attributes[0].Value;
+                        _abletonLiveSet.annotation = n.Attributes[0].Value;
                     }
                     else
                     {
@@ -103,9 +107,188 @@ namespace ALSDecompress
                         Console.WriteLine(e);
                     }
                 }
+                // nodes that have many elements
+                else
+                {
+                    switch (n.Name)
+                    {
+                        case "AutoColorPickerForPlayerAndGroupTracks":
+                            _abletonLiveSet.autoColourPickerPlayerTracks = int.Parse(n["NextColorIndex"].Attributes[0].Value);
+                            break;
+                        case "AutoColorPickerForReturnAndMasterTracks":
+                            _abletonLiveSet.autoColourPickerMasterTracks = int.Parse(n["NextColorIndex"].Attributes[0].Value);
+                            break;
+                        case "ContentSplitterProperties":
+                            _abletonLiveSet.contentSplitterProperties = new ContentSplitterProperties(
+                                    bool.Parse(n["Open"].Attributes[0].Value),
+                                    int.Parse(n["Size"].Attributes[0].Value)
+                                );
+                            break;
+                        case "SequencerNavigator":
+                            _abletonLiveSet.sequencerNavigator = new SequencerNavigator(
+                                    double.Parse(n["BeatTimeHelper"]["CurrentZoom"].Attributes[0].Value),
+                                    int.Parse(n["ScrollerPos"].Attributes[0].Value),
+                                    int.Parse(n["ScrollerPos"].Attributes[1].Value),
+                                    int.Parse(n["ClientSize"].Attributes[0].Value),
+                                    int.Parse(n["ClientSize"].Attributes[1].Value)
+                                );
+                            break;
+                        case "TimeSelection":
+                            _abletonLiveSet.timeSelection = new TimeSelection(
+                                    int.Parse(n["AnchorTime"].Attributes[0].Value),
+                                    int.Parse(n["OtherTime"].Attributes[0].Value)
+                                );
+                            break;
+                        case "ScaleInformation":
+                            _abletonLiveSet.scaleInformation = new ScaleInformation(
+                                    int.Parse(n["RootNote"].Attributes[0].Value),
+                                    n["Name"].Attributes[0].Value
+                                );
+                            break;
+                        case "Grid":
+                            _abletonLiveSet.grid = new Grid(
+                                    int.Parse(n["FixedNumerator"].Attributes[0].Value),
+                                    int.Parse(n["FixedDenominator"].Attributes[0].Value),
+                                    int.Parse(n["GridIntervalPixel"].Attributes[0].Value),
+                                    int.Parse(n["Ntoles"].Attributes[0].Value),
+                                    bool.Parse(n["SnapToGrid"].Attributes[0].Value),
+                                    bool.Parse(n["Fixed"].Attributes[0].Value)
+                                );
+                            break;
+                    }
+                }
+            }
+        }
+
+        private void GetTracks(XmlNode node)
+        {
+            _abletonLiveSet.returnTracks ??= new List<ReturnTrack>();
+            _abletonLiveSet.midiTracks ??= new List<MidiTrack>();
+            _abletonLiveSet.audioTracks ??= new List<AudioTrack>();
+            foreach(XmlNode track in node.ChildNodes)
+            {
+                Track newTrack;
+                switch (track.Name)
+                {
+                    case "ReturnTrack":
+                        newTrack = new ReturnTrack(int.Parse(track.Attributes[0].Value));
+                        _abletonLiveSet.returnTracks.Add((ReturnTrack)newTrack);
+                        break;
+                    case "MidiTrack":
+                        newTrack = new MidiTrack(int.Parse(track.Attributes[0].Value));
+                        _abletonLiveSet.midiTracks.Add((MidiTrack)newTrack);
+                        break;
+                    case "AudioTrack":
+                        newTrack = new AudioTrack(int.Parse(track.Attributes[0].Value));
+                        _abletonLiveSet.audioTracks.Add((AudioTrack)newTrack);
+                        break;
+                    default:
+                        Console.WriteLine($"Could not parse type of track for {track.Name}, returning.");
+                        return;
+                }
+                newTrack.boolValues ??= new Dictionary<string, bool>();
+                newTrack.intValues ??= new Dictionary<string, int>();
+                foreach(XmlElement el in track.ChildNodes)
+                {
+                    if(el.Attributes.Count == 1)
+                    {
+                        if (el.Name == "ViewData")
+                        {
+                            newTrack.viewData = el.Attributes[0].Value;
+                        }
+                        else
+                        {
+                            if (int.TryParse(el.Attributes[0].Value, out int iVal))
+                            {
+                                newTrack.intValues.Add(el.Name, iVal);
+                            }
+                            else if (bool.TryParse(el.Attributes[0].Value, out bool bVal))
+                            {
+                                newTrack.boolValues.Add(el.Name, bVal);
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Could not parse value from {el.Name} in track {track.Name}");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if(el.Name == "TrackDelay")
+                        {
+                            newTrack.trackDelay = new Track.TrackDelay(int.Parse(el["Value"].Attributes[0].Value), 
+                                bool.Parse(el["IsValueSampleBased"].Attributes[0].Value));
+                        }
+                        else if(el.Name == "Name")
+                        {
+                            newTrack.name = new Track.Name(el["EffectiveName"].Attributes[0].Value, 
+                                el["UserName"].Attributes[0].Value, 
+                                el["Annotation"].Attributes[0].Value, 
+                                el["MemorizedFirstClipName"].Attributes[0].Value);
+                        }
+                    }
+                }
             }
         }
         
+        public void GetMasterTrack(XmlNode masterNode)
+        {
+            _abletonLiveSet.masterTrack = new MasterTrack();
+            var masterTrack = _abletonLiveSet.masterTrack;
+            masterTrack.boolValues??= new Dictionary<string, bool>();
+            masterTrack.intValues ??= new Dictionary<string, int>();
+            foreach (XmlElement el in masterNode.ChildNodes)
+            {
+                // single elements that have an attribute
+                if (el.Attributes.Count == 1)
+                {
+                    if (el.Name == "ViewData")
+                    {
+                        masterTrack.viewData = el.Attributes[0].Value;
+                    }
+                    else
+                    {
+                        if (int.TryParse(el.Attributes[0].Value, out int iVal))
+                        {
+                            masterTrack.intValues.Add(el.Name, iVal);
+                        }
+                        else if (bool.TryParse(el.Attributes[0].Value, out bool bVal))
+                        {
+                            masterTrack.boolValues.Add(el.Name, bVal);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Could not parse value from {el.Name} in Master Track");
+                        }
+                    }
+                }                
+                else
+                {
+                    if (el.Name == "TrackDelay")
+                    {
+                        masterTrack.trackDelay = new Track.TrackDelay(int.Parse(el["Value"].Attributes[0].Value),
+                            bool.Parse(el["IsValueSampleBased"].Attributes[0].Value));
+                    }
+                    else if (el.Name == "Name")
+                    {
+                        masterTrack.name = new Track.Name(el["EffectiveName"].Attributes[0].Value,
+                            el["UserName"].Attributes[0].Value,
+                            el["Annotation"].Attributes[0].Value,
+                            el["MemorizedFirstClipName"].Attributes[0].Value);
+                    }
+                }
+            }
+        }
+
+        private void GetViewStates(XmlNode node)
+        {
+            _abletonLiveSet.viewStates = new ViewStates();
+            foreach(XmlElement el in node.ChildNodes)
+            {
+                _abletonLiveSet.viewStates.elements.Add(el.Name, int.Parse(el.Attributes[0].Value));
+            }
+        }
+
         public void WriteToXml()
         {
             var xmlDoc = _abletonLiveSet.CreateDocumentFromData();

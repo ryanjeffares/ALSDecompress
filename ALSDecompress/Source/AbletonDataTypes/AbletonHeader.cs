@@ -2,18 +2,13 @@ using System.Collections.Generic;
 
 namespace ALSDecompress.AbletonDataTypes
 {
-    public class AbletonHeader
+    class AbletonHeader
     {
         public int MajorVersion { get; }
         public string MinorVersion { get; }
         public int SchemaChangeCount { get; }
         public string Creator { get; }
-        public string Revision { get; }
-
-        public Dictionary<string, int> intValues;
-        public Dictionary<string, bool> boolValues;
-        public Dictionary<string, int> videoRect;
-        public string viewData, annotation;
+        public string Revision { get; }       
 
         public AbletonHeader(int majVer, string minVer, int schemaChangeCount, string creator, string revision)
         {
