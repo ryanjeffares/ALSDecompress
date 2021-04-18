@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Ableton MajorVersion="5" MinorVersion="10.0_377" SchemaChangeCount="3" Creator="Ableton Live 10.1.30" Revision="fc0fea66dc1b6378c41d79c15fae47660f1ff244">
+  <LiveSet>
+    <NextPointeeId Value="20565" />
+    <OverwriteProtectionNumber Value="2561" />
+    <LomId Value="0" />
+    <LomIdView Value="0" />
+    <GlobalQuantisation Value="4" />
+    <AutoQuantisation Value="0" />
+    <SmpteFormat Value="0" />
+    <ViewStateFxSlotCount Value="4" />
+    <ViewStateSessionMixerHeight Value="120" />
+    <TracksListWrapper Value="0" />
+    <VisibleTracksListWrapper Value="0" />
+    <ReturnTracksListWrapper Value="0" />
+    <ScenesListWrapper Value="0" />
+    <CuePointsListWrapper Value="0" />
+    <ChooserBar Value="0" />
+    <CrossfadeCurve Value="2" />
+    <LatencyCompensation Value="2" />
+    <HighlightedTrackIndex Value="1" />
+    <ColorSequenceIndex Value="0" />
+    <TrackHeaderWidth Value="93" />
+    <ViewStateLaunchPanel Value="false" />
+    <ViewStateEnvelopePanel Value="false" />
+    <ViewStateSamplePanel Value="true" />
+    <SoloOrPflSavedValue Value="true" />
+    <SoloInPlace Value="true" />
+    <AutomationMode Value="false" />
+    <SnapAutomationToGrid Value="true" />
+    <ArrangementOverdub Value="false" />
+    <MidiFoldIn Value="false" />
+    <MidiPrelisten Value="false" />
+    <UseWarperLegacyHiQMode Value="false" />
+    <ShowVideoWindow Value="true" />
+    <ViewStateArrangerHasDetail Value="false" />
+    <ViewStateSessionHasDetail Value="true" />
+    <ViewStateDetailIsSample Value="true" />
+    <VideoWindowRect Top="-2147483648" Left="-2147483648" Bottom="-2147483648" Right="-2147483648" />
+    <ViewData Value="{}" />
+    <Annotation Value="" />
+  </LiveSet>
+</Ableton>
